@@ -16,6 +16,9 @@ dependencies:
   translation_domain: # Local package dependency
     path: ../packages/translation_domain
 
+flutter:
+  uses-material-design: true
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
