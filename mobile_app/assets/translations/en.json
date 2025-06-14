@@ -1,0 +1,7 @@
+{
+  "appTitle": "My App",
+  "greeting": "Hello from Asset!",
+  "farewell": "Goodbye from Asset!",
+  "refresh_translations_button": "Refresh Translations",
+  "missing_key_example": "This key exists in EN"
+}
