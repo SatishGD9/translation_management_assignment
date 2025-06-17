@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:translation_domain/translation_domain.dart';
 
-class TranslationListItem extends StatelessWidget {
+import 'tool_tip.dart';
+
+class TranslationListItem extends StatefulWidget {
   final TranslationEntry entry;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -14,47 +16,85 @@ class TranslationListItem extends StatelessWidget {
   });
 
   @override
+  State<TranslationListItem> createState() => _TranslationListItemState();
+}
+
+class _TranslationListItemState extends State<TranslationListItem> {
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Key: ${entry.key}',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            ...entry.translations.entries.map((mapEntry) {
-              return Padding(
-                padding: const EdgeInsets.only(left: 8.0, top: 2.0, bottom: 2.0),
-                child: Text('${mapEntry.key.toUpperCase()}: ${mapEntry.value}'),
-              );
-            }).toList(),
-            const SizedBox(height: 12),
+            /// Translation key section
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextButton.icon(
-                  icon: const Icon(Icons.edit, size: 20),
-                  label: const Text('Edit'),
-                  onPressed: onEdit,
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.primary,
+                SizedBox(
+                  width: 250,
+                  child: HoverTextOverlay(
+                    text: widget.entry.key,
                   ),
                 ),
-                const SizedBox(width: 8),
-                TextButton.icon(
-                  icon: const Icon(Icons.delete, size: 20),
-                  label: const Text('Delete'),
-                  onPressed: onDelete,
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.error,
-                  ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, size: 20),
+                      tooltip: 'Edit Translation',
+                      onPressed: widget.onEdit,
+                      color: theme.colorScheme.primary,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, size: 20),
+                      tooltip: 'Delete Translation',
+                      onPressed: widget.onDelete,
+                      color: theme.colorScheme.error,
+                    ),
+                  ],
                 ),
               ],
+            ),
+            const Divider(height: 24),
+
+            /// Translations list
+            SizedBox(
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: widget.entry.translations.entries.map((mapEntry) {
+                  return ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minWidth: 500,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          HoverTextOverlay(
+                            text: mapEntry.key.toUpperCase(),
+                          ),
+                          const SizedBox(height: 4),
+                          HoverTextOverlay(
+                            text: mapEntry.value,
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
           ],
         ),
