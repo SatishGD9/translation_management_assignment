@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:translation_domain/translation_domain.dart';
 
 class TranslationFormDialog extends StatefulWidget {
-  final BuildContext blocContext; // To access the BLoC
+  final BuildContext blocContext;
   final TranslationEntry? existingEntry;
   final List<String> supportedLocales;
 
@@ -30,108 +30,143 @@ class _TranslationFormDialogState extends State<TranslationFormDialog> {
   @override
   void initState() {
     super.initState();
-    _keyController = TextEditingController(text: widget.existingEntry?.key ?? '');
-    _localeControllers = {};
-    for (var locale in widget.supportedLocales) {
-      _localeControllers[locale] = TextEditingController(
-        text: widget.existingEntry?.translations[locale] ?? '',
-      );
-    }
+    _keyController =
+        TextEditingController(text: widget.existingEntry?.key ?? '');
+    _localeControllers = {
+      for (var locale in widget.supportedLocales)
+        locale: TextEditingController(
+          text: widget.existingEntry?.translations[locale] ?? '',
+        ),
+    };
   }
 
   @override
   void dispose() {
     _keyController.dispose();
-    _localeControllers.forEach((_, controller) => controller.dispose());
+    _localeControllers.values.forEach((controller) => controller.dispose());
     super.dispose();
   }
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       final key = _keyController.text.trim();
-      final translations = <String, String>{};
-      _localeControllers.forEach((locale, controller) {
-        translations[locale] = controller.text.trim();
-      });
+      final translations = {
+        for (var entry in _localeControllers.entries)
+          entry.key: entry.value.text.trim(),
+      };
 
-      final adminBloc = BlocProvider.of<AdminTranslationsBloc>(widget.blocContext);
+      final bloc = BlocProvider.of<AdminTranslationsBloc>(widget.blocContext);
 
       if (_isEditing) {
         final updatedEntry = widget.existingEntry!.copyWith(
           key: key,
           translations: translations,
         );
-        adminBloc.add(UpdateAdminTranslation(updatedEntry));
+        bloc.add(UpdateAdminTranslation(updatedEntry));
       } else {
-        adminBloc.add(AddAdminTranslation(key, translations));
+        bloc.add(AddAdminTranslation(key, translations));
       }
-      Navigator.of(context).pop(); // Close the dialog
+
+      Navigator.of(context).pop();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(_isEditing ? 'Edit Translation' : 'Add New Translation'),
-      content: SingleChildScrollView( // Important for smaller dialogs or many locales
-        child: Form(
-          key: _formKey,
+    final inputDecoration = InputDecoration(
+      contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+    );
+
+    return Dialog(
+      insetPadding:
+          const EdgeInsets.all(32), // controls overall spacing from screen edge
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 800), // wider dialog
+        child: Padding(
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              TextFormField(
-                controller: _keyController,
-                decoration: const InputDecoration(
-                  labelText: 'Translation Key',
-                  hintText: 'e.g., greeting, common.ok',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Key cannot be empty';
-                  }
-                  // Add more validation if needed (e.g., no spaces, specific format)
-                  return null;
-                },
+            children: [
+              Text(
+                _isEditing ? 'Edit Translation' : 'Add New Translation',
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
-              const SizedBox(height: 20),
-              Text('Translations:', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              ...widget.supportedLocales.map((locale) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: TextFormField(
-                    controller: _localeControllers[locale],
-                    decoration: InputDecoration(
-                      labelText: 'Value for "${locale.toUpperCase()}"',
-                      border: const OutlineInputBorder(),
+              const SizedBox(height: 16),
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    // Key field
+                    TextFormField(
+                      controller: _keyController,
+                      decoration: inputDecoration.copyWith(
+                        labelText: 'Translation Key',
+                        hintText: 'e.g., greeting, common.ok',
+                      ),
+                      style: const TextStyle(fontSize: 16),
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
+                              ? 'Key cannot be empty'
+                              : null,
                     ),
-                    validator: (value) {
-                      // Optionally, make some locales mandatory
-                      // if (locale == 'en' && (value == null || value.trim().isEmpty)) {
-                      //   return 'English translation cannot be empty';
-                      // }
-                      return null;
-                    },
-                  ),
-                );
-              }).toList(),
+                    const SizedBox(height: 16),
+
+                    // Translations header
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Translations:',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    ...widget.supportedLocales.map((locale) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10.0),
+                        child: TextFormField(
+                          controller: _localeControllers[locale],
+                          decoration: inputDecoration.copyWith(
+                            labelText: 'Value for "${locale.toUpperCase()}"',
+                          ),
+                          style: const TextStyle(fontSize: 16),
+                          maxLines: 4,
+                          minLines: 4,
+                        ),
+                      );
+                    }).toList(),
+
+                    const SizedBox(height: 16),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Cancel',
+                              style: TextStyle(fontSize: 16)),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: _submitForm,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 16),
+                            textStyle: const TextStyle(fontSize: 16),
+                          ),
+                          child: Text(
+                              _isEditing ? 'Save Changes' : 'Add Translation'),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
             ],
           ),
         ),
       ),
-      actions: <Widget>[
-        TextButton(
-          child: const Text('Cancel'),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        ElevatedButton(
-          child: Text(_isEditing ? 'Save Changes' : 'Add Translation'),
-          onPressed: _submitForm,
-        ),
-      ],
     );
   }
 }
