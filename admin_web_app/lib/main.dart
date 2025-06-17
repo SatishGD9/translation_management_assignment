@@ -20,9 +20,11 @@ class AdminApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Translation Admin',
+      debugShowCheckedModeBanner: false,
       home: BlocProvider(
         create: (context) =>
-        AdminTranslationsBloc(MockAdminTranslationService())..add(LoadAdminTranslations()),
+            AdminTranslationsBloc(MockAdminTranslationService())
+              ..add(LoadAdminTranslations()),
         child: const AdminHomePage(),
       ),
     );
@@ -57,25 +59,54 @@ class _AdminHomePageState extends State<AdminHomePage> {
       appBar: AppBar(title: const Text('Manage Translations')),
       body: BlocBuilder<AdminTranslationsBloc, AdminTranslationsState>(
         builder: (context, state) {
-          if (state is AdminTranslationsLoading || state is AdminTranslationsInitial) {
+          if (state is AdminTranslationsLoading ||
+              state is AdminTranslationsInitial) {
             return const Center(child: CircularProgressIndicator());
           }
           if (state is AdminTranslationsLoaded) {
             if (state.translations.isEmpty) {
-              return const Center(child: Text('No translations yet. Add some!'));
+              return const Center(
+                  child: Text('No translations yet. Add some!'));
             }
-            return ListView.builder(
-              itemCount: state.translations.length,
-              itemBuilder: (context, index) {
-                final entry = state.translations[index];
-                return TranslationListItem( // You'll create this widget
-                  entry: entry,
-                  onEdit: () => _showTranslationForm(entry: entry),
-                  onDelete: () {
-                    context.read<AdminTranslationsBloc>().add(DeleteAdminTranslation(entry.id));
-                  },
-                );
-              },
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final screenWidth = constraints.maxWidth;
+
+                  // Determine max extent based on screen width
+                  double maxCrossAxisExtent;
+
+                  if (screenWidth >= 1200) {
+                    maxCrossAxisExtent = 625; // wide screens
+                  } else if (screenWidth >= 800) {
+                    maxCrossAxisExtent = 600; // medium screens
+                  } else {
+                    maxCrossAxisExtent =
+                        screenWidth; // full width on small screens
+                  }
+
+                  return GridView.builder(
+                    gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: maxCrossAxisExtent,
+                      childAspectRatio: 1.35,
+                    ),
+                    itemCount: state.translations.length,
+                    itemBuilder: (context, index) {
+                      final entry = state.translations[index];
+                      return TranslationListItem(
+                        entry: entry,
+                        onEdit: () => _showTranslationForm(entry: entry),
+                        onDelete: () {
+                          context.read<AdminTranslationsBloc>().add(
+                                DeleteAdminTranslation(entry.id),
+                              );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             );
           }
           if (state is AdminTranslationsError) {
