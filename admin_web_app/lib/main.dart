@@ -1,4 +1,6 @@
 import 'package:admin_web_app/blocs/admin_translations_state.dart';
+import 'package:admin_web_app/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_web_app/blocs/admin_translations_bloc.dart';
@@ -9,7 +11,11 @@ import 'package:translation_domain/translation_domain.dart';
 
 import 'blocs/admin_translations_event.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const AdminApp());
 }
 
@@ -99,7 +105,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         onEdit: () => _showTranslationForm(entry: entry),
                         onDelete: () {
                           context.read<AdminTranslationsBloc>().add(
-                                DeleteAdminTranslation(entry.id),
+                                DeleteAdminTranslation(entry.recordId),
                               );
                         },
                       );

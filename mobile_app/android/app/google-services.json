@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1008659561659",
+    "project_id": "fluttertranslationdemo",
+    "storage_bucket": "fluttertranslationdemo.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1008659561659:android:c36bcbb03f31b0a22b7d9e",
+        "android_client_info": {
+          "package_name": "com.example.translation_management_assignment"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1UOahmDw_QZmOWEn8Bv6vBxsQIf6AGD0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

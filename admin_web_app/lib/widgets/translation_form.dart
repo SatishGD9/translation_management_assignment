@@ -58,7 +58,7 @@ class _TranslationFormDialogState extends State<TranslationFormDialog> {
       final bloc = BlocProvider.of<AdminTranslationsBloc>(widget.blocContext);
 
       if (_isEditing) {
-        final updatedEntry = widget.existingEntry!.copyWith(
+        TranslationEntry updatedEntry = widget.existingEntry!.copyWith(
           key: key,
           translations: translations,
         );
