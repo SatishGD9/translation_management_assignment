@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:admin_web_app/blocs/admin_translations_bloc.dart';
 import 'package:admin_web_app/blocs/admin_translations_event.dart';
+import 'package:admin_web_app/services/open_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:translation_domain/translation_domain.dart';
@@ -26,7 +29,7 @@ class _TranslationFormDialogState extends State<TranslationFormDialog> {
   late Map<String, TextEditingController> _localeControllers;
 
   bool get _isEditing => widget.existingEntry != null;
-
+  bool loadingAiSuggestions = false;
   @override
   void initState() {
     super.initState();
@@ -88,9 +91,55 @@ class _TranslationFormDialogState extends State<TranslationFormDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                _isEditing ? 'Edit Translation' : 'Add New Translation',
-                style: Theme.of(context).textTheme.headlineSmall,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _isEditing ? 'Edit Translation' : 'Add New Translation',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(
+                    width: 8,
+                  ),
+                  loadingAiSuggestions
+                      ? SizedBox(
+                          height: 40,
+                          width: 180,
+                          child: CustomShimmer(
+                            child: Card(
+                              elevation: 4,
+                              color: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: Colors.grey.shade300,
+                                  width: 1,
+                                ),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'Get AI Suggestion',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      : ElevatedButton(
+                          onPressed: () async {
+                            await loasSuggestionsFromAi();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 16),
+                            textStyle: const TextStyle(fontSize: 16),
+                          ),
+                          child: const Text("Get AI Suggestion"),
+                        )
+                ],
               ),
               const SizedBox(height: 16),
               Form(
@@ -167,6 +216,117 @@ class _TranslationFormDialogState extends State<TranslationFormDialog> {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> loasSuggestionsFromAi() async {
+    try {
+      loadingAiSuggestions = true;
+      setState(() {});
+      OpenRouter openRouter = OpenRouter();
+      String result = await openRouter.fetchTranslationSuggestion(
+        englishText: _localeControllers['en']!.text,
+        targetLanguage: widget.supportedLocales.join(','),
+      );
+      final RegExp regex = RegExp(r'```json\s*([\s\S]*?)```', multiLine: true);
+      final match = regex.firstMatch(result);
+
+      if (match != null) {
+        String jsonBlock = match.group(1)!.trim();
+
+        final Map<String, dynamic> translations = jsonDecode(jsonBlock);
+
+        _localeControllers['es']!.text = translations['es'] ?? '';
+        _localeControllers['fr']!.text = translations['fr'] ?? '';
+        loadingAiSuggestions = false;
+        setState(() {});
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("No translations found"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        loadingAiSuggestions = false;
+        setState(() {});
+      }
+    } catch (e, message) {
+      loadingAiSuggestions = false;
+      setState(() {});
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Error getting AI suggestions"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+
+      debugPrint(e.toString() + message.toString());
+    }
+  }
+}
+
+class CustomShimmer extends StatefulWidget {
+  final Widget child;
+  final Color baseColor;
+  final Color highlightColor;
+
+  const CustomShimmer({
+    super.key,
+    required this.child,
+    this.baseColor = const Color(0xFFE0E0E0),
+    this.highlightColor = const Color(0xFFF5F5F5),
+  });
+
+  @override
+  State<CustomShimmer> createState() => _CustomShimmerState();
+}
+
+class _CustomShimmerState extends State<CustomShimmer>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat();
+    _animation = Tween<double>(begin: -1.0, end: 2.0).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return ShaderMask(
+          shaderCallback: (bounds) {
+            return LinearGradient(
+              begin: Alignment(_animation.value - 1, 0),
+              end: Alignment(_animation.value, 0),
+              colors: [
+                widget.baseColor,
+                widget.highlightColor,
+                widget.baseColor,
+              ],
+              stops: const [0.0, 0.5, 1.0],
+            ).createShader(bounds);
+          },
+          child: widget.child,
+        );
+      },
     );
   }
 }
