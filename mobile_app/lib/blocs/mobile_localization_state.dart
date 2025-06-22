@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_app/localization/app_localization.dart';
+import 'package:translation_domain/translation_domain.dart';
 
 class MobileLocalizationState extends Equatable {
   final Locale currentLocale;
@@ -9,13 +10,14 @@ class MobileLocalizationState extends Equatable {
   final String? error;
   // This stores all translations fetched from server, structured by locale
   final Map<String, Map<String, String>> allServerTranslations;
-
+  final List<TranslationEntry> translations;
   const MobileLocalizationState({
     required this.currentLocale,
     this.appLocalizations,
     this.isLoading = false,
     this.error,
     this.allServerTranslations = const {},
+    this.translations = const [],
   });
 
   MobileLocalizationState copyWith({
@@ -25,16 +27,26 @@ class MobileLocalizationState extends Equatable {
     String? error,
     bool clearError = false,
     Map<String, Map<String, String>>? allServerTranslations,
+    List<TranslationEntry>? translations,
   }) {
     return MobileLocalizationState(
       currentLocale: currentLocale ?? this.currentLocale,
       appLocalizations: appLocalizations ?? this.appLocalizations,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : error ?? this.error,
-      allServerTranslations: allServerTranslations ?? this.allServerTranslations,
+      allServerTranslations:
+          allServerTranslations ?? this.allServerTranslations,
+      translations: translations ?? this.translations,
     );
   }
 
   @override
-  List<Object?> get props => [currentLocale, appLocalizations, isLoading, error, allServerTranslations];
+  List<Object?> get props => [
+        currentLocale,
+        appLocalizations,
+        isLoading,
+        error,
+        allServerTranslations,
+        translations
+      ];
 }
