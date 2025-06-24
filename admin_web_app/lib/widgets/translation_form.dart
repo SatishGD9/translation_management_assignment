@@ -103,7 +103,7 @@ class _TranslationFormDialogState extends State<TranslationFormDialog> {
                   ),
                   loadingAiSuggestions
                       ? SizedBox(
-                          height: 40,
+                          height: 35,
                           width: 180,
                           child: CustomShimmer(
                             child: Card(
@@ -180,8 +180,8 @@ class _TranslationFormDialogState extends State<TranslationFormDialog> {
                             labelText: 'Value for "${locale.toUpperCase()}"',
                           ),
                           style: const TextStyle(fontSize: 16),
-                          maxLines: 4,
-                          minLines: 4,
+                          maxLines: 3,
+                          minLines: 3,
                         ),
                       );
                     }).toList(),
