@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 class OpenRouter {
   /// Replace this with your actual OpenRouter API key
   String openRouterApiKey =
-      "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";
+      "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";
 
   /// Optional but recommended for OpenRouter rankings
   String yourSiteUrl = "<YOUR_SITE_URL>";

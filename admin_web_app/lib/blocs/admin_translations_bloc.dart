@@ -1,6 +1,7 @@
 import 'package:admin_web_app/blocs/admin_translations_event.dart';
 import 'package:admin_web_app/blocs/admin_translations_state.dart';
-import 'package:flutter/foundation.dart';
+import 'package:admin_web_app/constants.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_web_app/services/mock_admin_translation_service.dart';
 
@@ -35,6 +36,12 @@ class AdminTranslationsBloc
           await _translationService.addTranslation(event.key, event.values);
       if (translations) {
         add(LoadAdminTranslations());
+        ScaffoldMessenger.of(Constants.navigatorKey.currentContext!)
+            .showSnackBar(
+          const SnackBar(
+            content: Text("Translation added successfully"),
+          ),
+        );
       } else {
         emit(const AdminTranslationsError("Failed to add"));
       }
@@ -47,8 +54,16 @@ class AdminTranslationsBloc
   Future<void> _onUpdateTranslation(UpdateAdminTranslation event,
       Emitter<AdminTranslationsState> emit) async {
     try {
-      await _translationService.updateTranslation(event.entry);
-      add(LoadAdminTranslations());
+      bool result = await _translationService.updateTranslation(event.entry);
+      if (result) {
+        add(LoadAdminTranslations());
+        ScaffoldMessenger.of(Constants.navigatorKey.currentContext!)
+            .showSnackBar(
+          const SnackBar(
+            content: Text("Translation updated successfully"),
+          ),
+        );
+      }
     } catch (e) {
       emit(AdminTranslationsError("Failed to update: ${e.toString()}"));
       add(LoadAdminTranslations());
@@ -58,8 +73,16 @@ class AdminTranslationsBloc
   Future<void> _onDeleteTranslation(DeleteAdminTranslation event,
       Emitter<AdminTranslationsState> emit) async {
     try {
-      await _translationService.deleteTranslations(event.id);
-      add(LoadAdminTranslations());
+      bool result = await _translationService.deleteTranslations(event.id);
+      if (result) {
+        add(LoadAdminTranslations());
+        ScaffoldMessenger.of(Constants.navigatorKey.currentContext!)
+            .showSnackBar(
+          const SnackBar(
+            content: Text("Translation deleted successfully"),
+          ),
+        );
+      }
     } catch (e) {
       emit(AdminTranslationsError("Failed to delete: ${e.toString()}"));
       add(LoadAdminTranslations());

@@ -1,4 +1,5 @@
 import 'package:admin_web_app/blocs/admin_translations_state.dart';
+import 'package:admin_web_app/constants.dart';
 import 'package:admin_web_app/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +28,7 @@ class AdminApp extends StatelessWidget {
     return MaterialApp(
       title: 'Translation Admin',
       debugShowCheckedModeBanner: false,
+      navigatorKey: Constants.navigatorKey,
       home: BlocProvider(
         create: (context) =>
             AdminTranslationsBloc(MockAdminTranslationService())
